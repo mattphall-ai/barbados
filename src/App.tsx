@@ -1,17 +1,36 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import "./index.css";
 import { useProject } from "./hooks/useProject";
 import { makeId } from "./lib/id";
 import type { BrandFoundation, Screen, Source } from "./types";
-import { TopNav } from "./components/TopNav";
+import { TopNav, type AppMode } from "./components/TopNav";
+import { SocialBuilder } from "./social/ui/SocialBuilder";
 import { IntakePortal } from "./components/IntakePortal";
 import { ProcessingStatus } from "./components/ProcessingStatus";
 import { ReviewInterface } from "./components/ReviewInterface";
 import { Dashboard } from "./components/Dashboard";
 
+const MODE_KEY = "atomic:app-mode";
+
 export default function App() {
   const { project, setScreen, setSources, setFoundation, reset } = useProject();
   const filesRef = useRef<Map<string, File>>(new Map());
+  const [mode, setMode] = useState<AppMode>(() => {
+    try {
+      return localStorage.getItem(MODE_KEY) === "social" ? "social" : "foundation";
+    } catch {
+      return "foundation";
+    }
+  });
+
+  function changeMode(next: AppMode) {
+    setMode(next);
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {
+      // per-viewer convenience only
+    }
+  }
 
   function addFiles(files: File[]) {
     const newSources: Source[] = files.map((file) => {
@@ -61,9 +80,11 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopNav current={project.screen} reachable={reachable} onNavigate={setScreen} />
+      <TopNav mode={mode} onModeChange={changeMode} current={project.screen} reachable={reachable} onNavigate={setScreen} />
 
-      {project.screen === "intake" && (
+      {mode === "social" && <SocialBuilder />}
+
+      {mode === "foundation" && project.screen === "intake" && (
         <IntakePortal
           sources={project.sources}
           onAddFiles={addFiles}
@@ -73,7 +94,7 @@ export default function App() {
         />
       )}
 
-      {project.screen === "processing" && (
+      {mode === "foundation" && project.screen === "processing" && (
         <ProcessingStatus
           sources={project.sources}
           files={filesRef.current}
@@ -81,7 +102,7 @@ export default function App() {
         />
       )}
 
-      {project.screen === "review" && project.foundation && (
+      {mode === "foundation" && project.screen === "review" && project.foundation && (
         <ReviewInterface
           foundation={project.foundation}
           onUpdate={setFoundation}
@@ -89,7 +110,7 @@ export default function App() {
         />
       )}
 
-      {project.screen === "dashboard" && project.foundation && (
+      {mode === "foundation" && project.screen === "dashboard" && project.foundation && (
         <Dashboard project={project} onBackToReview={() => setScreen("review")} onStartNew={startNew} />
       )}
     </div>

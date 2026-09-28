@@ -78,6 +78,56 @@ Project state (sources + extracted foundation) persists to `localStorage`
 so a refresh doesn't lose review progress. Uploaded files themselves are
 only held in memory for the current session.
 
+## Social Media Builder
+
+Switch to **Social Builder** in the top bar. It assembles branded social
+videos from a library of precoded frame layouts and components, and exports
+them as [HyperFrames](https://hyperframes.heygen.com) compositions.
+
+- **Types (channel formats)**: Instagram Reels, IG/FB Stories, Feed 4:5,
+  Square, TikTok, YouTube Shorts and Landscape 16:9, each with a platform
+  safe zone. With *Use safe zone* on, every non-background slot is placed
+  inside it, so text, logos and ISI never sit under the platform UI.
+- **Frame layouts** (`src/social/layouts.ts`): 12 precoded layouts (Hero +
+  ISI, Hero + CTA, Split, Statement, Stat Callout, Product Hero, Benefit
+  List, Testimonial, Video + Lower Third, End Card, ISI Full Frame, Blank).
+  Slots are percentages of the safe zone, so one layout adapts to every
+  format. Switching a frame's layout carries its copy over.
+- **Components** (`src/social/components.ts`): background image, video or
+  color, scrim, headline + subhead, body copy, benefit list, stat callout
+  (count-up), CTA, logo, footnote, ISI (docked and auto-scrolling), product
+  shot, quote, lower third and badge. Each has typed fields, brand-color
+  pickers and an entrance animation.
+- **Persistent overlays**: layers that span every frame, such as one ISI
+  panel that scrolls across the whole video.
+- **Brand kit**: pulls approved colors, the logo and the brand name from the
+  Brand Foundation. Text fields offer approved claims, messages, CTAs and
+  ISI. Upload font files to embed them.
+- **Preflight**: flags text that overflows its slot (measured in the live
+  preview), content outside the safe zone, stand-in copy, missing media and
+  videos over the platform's length limit.
+
+Example: *frame 1: background image, headline + subhead, footnote, ISI;
+type: Instagram Reels (safe zone on)* is the **Hero · Headline + ISI**
+layout. It is also frame 1 of the **Reels · Hero + ISI** starter video.
+
+### Sending to HyperFrames
+
+The compiler (`src/social/compile.ts`) follows the HyperFrames composition
+contract: a `data-composition-id="main"` root, timed `.clip` frames, one
+paused GSAP timeline on `window.__timelines`, deterministic finite
+animation and inline assets. Every text field is exposed as a HyperFrames
+variable (`data-var-text`), and brand colors as color variables.
+
+- **Single-file composition**: one self-contained `index.html` (the "Send
+  to HyperFrames" import shape).
+- **Studio project (.zip)**: laid out like `hyperframes init`, with one
+  sub-composition per frame. Run `npx hyperframes preview`, `render`,
+  `cloud render` or `publish` on it.
+- **Compose brief**: a text brief for HeyGen's hosted HyperFrames (chat or
+  the MCP `compose` tool).
+- **variables.json**: for `hyperframes render --variables-file`.
+
 ## Setup
 
 ```bash
@@ -92,4 +142,5 @@ Dashboard.
 
 React + TypeScript + Vite, no backend — a static SPA (same shape as this
 account's other projects). `pdfjs-dist` for PDF text extraction, `jszip` for
-DOCX/PPTX parsing and building the DAM export zip.
+DOCX/PPTX parsing and building the DAM export and HyperFrames project zips,
+`gsap` for the Social Builder's in-app preview (exports load it from the CDN).
